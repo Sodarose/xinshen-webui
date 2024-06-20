@@ -1,102 +1,83 @@
+<!-- eslint-disable prettier/prettier -->
 <template>
-  <t-card class="dashboard-detail-card" shadow bordered>
-    <header>ssd</header>
+  <t-card title="基本配置" class="dashboard-detail-card" style="width: 100%;height: 100%;">
+    <t-space direction="vertical" style="width: 70%; height: 100%; position: relative;left: 20%;">
+      <t-form colon :label-width="150" style="top: 25px;position: relative;">
+        <t-form-item label="资源目录">
+          <t-input name="loop_vh_path" placeholder="D:\project"></t-input>
+        </t-form-item>
+
+        <t-form-item label="场景名称">
+          <t-input name="loop_vh_action" placeholder="xxxxx数字人"></t-input>
+        </t-form-item>
+
+        <t-form-item label="场景帧序">
+          <t-textarea name="loop_frame_idxs" placeholder="1,2,3,4,5,6,7,8,9,10,11,12,13,14" :autosize="false" />
+        </t-form-item>
+
+        <t-form-item label="自定动作">
+          <template #statusIcon>
+            <t-button @click="addItem">
+              <t-icon name="add" />
+            </t-button>
+          </template>
+        </t-form-item>
+
+        <!--自定义动作-->
+        <t-form-item v-for="(item, index) in spactionList" :key="item.id" :name="item.name">
+          <div class="demo-card" style="width: 100%;">
+            <t-card :title="`动作${index + 1}`" :bordered="false" name={{item.name}} hover-shadow>
+              <template #actions>
+                <a href="javascript:void(0)" @click="removeItem(item, index)">删除</a>
+              </template>
+              <t-space direction="vertical" style="width: 100%;">
+                <t-input placeholder="动作名称"></t-input>
+                <t-textarea placeholder="1,2,3,4,5,6,7,8,9,10,11,12,13,14" :autosize="false" />
+              </t-space>
+            </t-card>
+          </div>
+        </t-form-item>
+
+        <t-form-item :status-icon="false">
+          <t-space size="small">
+            <t-button theme="primary" type="submit" @click="saveItem()">保存</t-button>
+          </t-space>
+        </t-form-item>
+      </t-form>
+    </t-space>
+    <div style="height: 25px;"></div>
   </t-card>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'DashboardDetail',
-};
-</script>
+<script lang="ts" setup name="DashboardDetail">
+import { ref } from 'vue';
+import { TextareaProps } from 'tdesign-vue-next';
 
-<script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, watch, computed, onDeactivated } from 'vue';
+const spactionList = ref([{ id: 0, name: 'sp_actions0' }]);
 
-import * as echarts from 'echarts/core';
-import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
-import { LineChart, ScatterChart } from 'echarts/charts';
-import { CanvasRenderer } from 'echarts/renderers';
+const lastAddItem = ref(1);
 
-import { getFolderLineDataSet, getScatterDataSet } from './index';
-import { useSettingStore } from '@/store';
-import { changeChartsTheme } from '@/utils/color';
-
-echarts.use([GridComponent, LegendComponent, TooltipComponent, LineChart, ScatterChart, CanvasRenderer]);
-
-const store = useSettingStore();
-const chartColors = computed(() => store.chartColors);
-
-// lineChart logic
-let lineContainer: HTMLElement;
-let lineChart: echarts.ECharts;
-const renderLineChart = () => {
-  lineContainer = document.getElementById('lineContainer');
-  lineChart = echarts.init(lineContainer);
-  lineChart.setOption(getFolderLineDataSet({ ...chartColors.value }));
+const addItem = () => {
+  const addNum = lastAddItem.value;
+  spactionList.value.push({ id: addNum, name: `sp_actions${addNum}` });
+  lastAddItem.value += 1;
 };
 
-// scatterChart logic
-let scatterContainer: HTMLElement;
-let scatterChart: echarts.ECharts;
-const renderScatterChart = () => {
-  scatterContainer = document.getElementById('scatterContainer');
-  scatterChart = echarts.init(scatterContainer);
-  scatterChart.setOption(getScatterDataSet({ ...chartColors.value }));
+const removeItem = (item, index) => {
+  spactionList.value.splice(index, 1);
 };
 
-// chartSize update
-const updateContainer = () => {
-  lineChart?.resize({
-    width: lineContainer.clientWidth,
-    height: lineContainer.clientHeight,
-  });
-  scatterChart?.resize({
-    width: scatterContainer.clientWidth,
-    height: scatterContainer.clientHeight,
-  });
-};
+const saveItem = () => {
 
-const renderCharts = () => {
-  renderScatterChart();
-  renderLineChart();
-};
+}
 
-onMounted(() => {
-  renderCharts();
-  window.addEventListener('resize', updateContainer, false);
-  nextTick(() => {
-    updateContainer();
-  });
-});
+const textArea = { minRows: 3, maxRows: 5 }
 
-onUnmounted(() => {
-  window.removeEventListener('resize', updateContainer);
-});
-
-onDeactivated(() => {
-  storeModeWatch();
-  storeBrandThemeWatch();
-});
-
-const storeModeWatch = watch(
-  () => store.mode,
-  () => {
-    renderCharts();
-  },
-);
-
-const storeBrandThemeWatch = watch(
-  () => store.brandTheme,
-  () => {
-    changeChartsTheme([lineChart, scatterChart]);
-  },
-);
 </script>
 
 <style lang="less" scoped>
-.row-margin {
-  margin-top: 16px;
+.tdesign-demo-form-status .t-input {
+  width: 520px;
 }
 
 // 统一增加8px;
@@ -111,65 +92,6 @@ const storeBrandThemeWatch = watch(
   :deep(.t-card__actions) {
     display: flex;
     align-items: center;
-  }
-}
-
-.dashboard-list-card {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  height: 170px;
-  padding: 8px;
-
-  :deep(.t-card__header) {
-    padding-bottom: 8px;
-  }
-
-  :deep(.t-card__body) {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding-top: 0;
-  }
-
-  &.dark {
-    &:hover {
-      background: var(--td-gray-color-14);
-      cursor: pointer;
-    }
-  }
-
-  &.light {
-    &:hover {
-      background: var(--td-gray-color-14);
-      cursor: pointer;
-    }
-  }
-
-  &__number {
-    font-size: 36px;
-    line-height: 44px;
-    color: var(--td-text-color-primary);
-  }
-
-  &__text {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 14px;
-    color: var(--td-text-color-placeholder);
-    text-align: left;
-    line-height: 18px;
-
-    &-left {
-      display: flex;
-
-      .icon {
-        margin: 0 8px;
-      }
-    }
   }
 }
 </style>
